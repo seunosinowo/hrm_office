@@ -1,0 +1,253 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  EMPLOYEE
+  ASSESSOR
+  HR
+}
+
+enum AssessmentType {
+  SELF
+  ASSESSOR
+  CONSENSUS
+}
+
+enum AssessmentStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  REVIEWED
+}
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  email     String
+  // Add branding fields
+  logoUrl   String?
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users         User[]
+  departments   Department[]
+  jobs          Job[]
+  domains       CompetencyDomain[]
+  categories    CompetencyCategory[]
+  competencies  Competency[]
+  profLevels    ProficiencyLevel[]
+  assessments   Assessment[]
+  jobRequirements JobCompetency[]
+  assessmentRatings AssessmentRating[]
+  assessorAssignments AssessorAssignment[]
+  employeeJobAssignments EmployeeJobAssignment[]
+  passwordResetTokens PasswordResetToken[] @relation("OrgPasswordResetTokens")
+  emailVerificationTokens EmailVerificationToken[] @relation("OrgEmailVerificationTokens")
+}
+
+model User {
+  id              String   @id @default(uuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  email           String
+  passwordHash    String
+  firstName       String
+  lastName        String
+  phone           String?
+  profilePictureUrl String?
+  role            Role
+  isLockedUntil   DateTime?
+  emailVerifiedAt DateTime?
+  onboardingCompleted Boolean @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // relationships
+  assignedEmployees AssessorAssignment[] @relation("AssessorToEmployeeAssigments")
+  assessors         AssessorAssignment[] @relation("EmployeeToAssessorAssignments")
+  employeeAssessments Assessment[] @relation("EmployeeAssessments")
+  assessorAssessments Assessment[] @relation("AssessorAssessments")
+  passwordResetTokens PasswordResetToken[] @relation("UserPasswordResetTokens")
+  emailVerificationTokens EmailVerificationToken[] @relation("UserEmailVerificationTokens")
+  jobAssignments   EmployeeJobAssignment[]
+
+  @@unique([organizationId, email])
+}
+
+model Department {
+  id             String   @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  name           String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  jobs Job[]
+}
+
+model Job {
+  id             String   @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  departmentId   String?
+  department     Department? @relation(fields: [departmentId], references: [id])
+  title          String
+  description    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  requirements JobCompetency[]
+  employeeAssignments EmployeeJobAssignment[]
+}
+
+model CompetencyDomain {
+  id             String   @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  domainName     String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  categories CompetencyCategory[]
+}
+
+model CompetencyCategory {
+  id             String   @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  name           String
+  domainId       String
+  domain         CompetencyDomain @relation(fields: [domainId], references: [id])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  competencies Competency[]
+}
+
+model Competency {
+  id             String   @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  name           String
+  description    String?
+  categoryId     String
+  category       CompetencyCategory @relation(fields: [categoryId], references: [id])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  jobRequirements JobCompetency[]
+  ratings         AssessmentRating[]
+}
+
+model ProficiencyLevel {
+  id             String   @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  levelNumber    Int
+  label          String
+  description    String?
+
+  @@unique([organizationId, levelNumber])
+}
+
+model JobCompetency {
+  id           String   @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  jobId        String
+  job          Job        @relation(fields: [jobId], references: [id])
+  competencyId String
+  competency   Competency @relation(fields: [competencyId], references: [id])
+  requiredLevel Int
+}
+
+model Assessment {
+  id             String   @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  type           AssessmentType
+  status         AssessmentStatus @default(PENDING)
+  employeeId     String
+  employee       User @relation("EmployeeAssessments", fields: [employeeId], references: [id], onDelete: Cascade)
+  assessorId     String?
+  assessor       User? @relation("AssessorAssessments", fields: [assessorId], references: [id], onDelete: SetNull)
+  createdAt      DateTime @default(now())
+  startedAt      DateTime?
+  completedAt    DateTime?
+
+  ratings AssessmentRating[]
+}
+
+model AssessmentRating {
+  id             String   @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  assessmentId   String
+  assessment     Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  competencyId   String
+  competency     Competency @relation(fields: [competencyId], references: [id])
+  rating         Int
+  comment        String?
+}
+
+model AssessorAssignment {
+  id               String   @id @default(uuid())
+  organizationId   String
+  organization     Organization @relation(fields: [organizationId], references: [id])
+  assessorId       String
+  assessor         User @relation("AssessorToEmployeeAssigments", fields: [assessorId], references: [id], onDelete: Cascade)
+  employeeId       String
+  employee         User @relation("EmployeeToAssessorAssignments", fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, assessorId, employeeId])
+}
+
+model PasswordResetToken {
+  id               String   @id @default(uuid())
+  organizationId   String
+  organization     Organization @relation("OrgPasswordResetTokens", fields: [organizationId], references: [id])
+  userId           String
+  user             User @relation("UserPasswordResetTokens", fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash        String
+  expiresAt        DateTime
+  usedAt           DateTime?
+  createdAt        DateTime @default(now())
+
+  @@index([organizationId, userId])
+}
+
+model EmailVerificationToken {
+  id               String   @id @default(uuid())
+  organizationId   String
+  organization     Organization @relation("OrgEmailVerificationTokens", fields: [organizationId], references: [id])
+  userId           String
+  user             User @relation("UserEmailVerificationTokens", fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash        String
+  expiresAt        DateTime
+  usedAt           DateTime?
+  createdAt        DateTime @default(now())
+
+  @@index([organizationId, userId])
+}
+
+model EmployeeJobAssignment {
+  id             String   @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  employeeId     String
+  employee       User @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  jobId          String
+  job            Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  startDate      DateTime?
+  createdAt      DateTime @default(now())
+
+  @@unique([organizationId, employeeId, jobId])
+}

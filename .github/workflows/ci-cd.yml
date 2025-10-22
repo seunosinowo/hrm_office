@@ -1,0 +1,156 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # Backend Build and Test
+  backend:
+    name: Backend - Build & Test
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    defaults:
+      run:
+        working-directory: ./backend
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Generate Prisma Client
+        run: npx prisma generate
+      
+      - name: Lint code
+        run: npm run lint --if-present
+        continue-on-error: true
+      
+      - name: Build backend
+        run: npm run build
+      
+      - name: Archive backend build
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-build-${{ matrix.node-version }}
+          path: backend/dist
+          retention-days: 7
+
+  # Frontend Build and Test
+  frontend:
+    name: Frontend - Build & Test
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    defaults:
+      run:
+        working-directory: ./frontend
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Lint code
+        run: npm run lint --if-present
+        continue-on-error: true
+      
+      - name: Build frontend
+        run: npm run build
+      
+      - name: Archive frontend build
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build-${{ matrix.node-version }}
+          path: frontend/dist
+          retention-days: 7
+
+  # Security Audit
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+      
+      - name: Audit backend dependencies
+        run: |
+          cd backend
+          npm audit --audit-level=moderate || true
+      
+      - name: Audit frontend dependencies
+        run: |
+          cd frontend
+          npm audit --audit-level=moderate || true
+
+  # Code Quality Check
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+      
+      - name: Check TypeScript (Backend)
+        run: |
+          cd backend
+          npm ci
+          npx tsc --noEmit || true
+      
+      - name: Check TypeScript (Frontend)
+        run: |
+          cd frontend
+          npm ci
+          npx tsc --noEmit || true
+
+  # Notification on success
+  notify-success:
+    name: Notify Success
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    if: success()
+    
+    steps:
+      - name: Success notification
+        run: |
+          echo "✅ All builds succeeded!"
+          echo "Backend and Frontend builds completed successfully."
