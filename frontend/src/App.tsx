@@ -27,6 +27,11 @@ const Callback = lazy(() => import('./pages/auth/Callback'));
 const WelcomePage = lazy(() => import("./pages/auth/WelcomePage"));
 const BucketDiagnostic = lazy(() => import("./pages/BucketDiagnostic"));
 
+// Performance Appraisal Components
+const EmployeeAppraisal = lazy(() => import("./pages/Employee/Performance_appraisal/EmployeeAppraisal"));
+const AssessorAppraisal = lazy(() => import("./pages/Assessor/Performance_appraisal/AssessorAppraisal"));
+const HRAppraisal = lazy(() => import("./pages/HR/Performance_appraisal/HRAppraisal"));
+
 // Employee Components
 // const User = lazy(() => import("./pages/Employee/User_and_role_management/User"));
 const EmployeeDetails = lazy(() => import("./pages/Employee/User_and_role_management/EmployeeDetails"));
@@ -157,6 +162,9 @@ export default function App() {
                 <Route path="/organization-gap" element={<OrganizationGap />} />
                 <Route path="/employee/consensus-assessment" element={<EmployeeConsensusAssessment />} />
                 <Route path="/employee/analytics" element={<EmployeeAnalytics />} />
+                <Route path="/employee/performance-appraisal" element={<EmployeeAppraisal />} />
+                {/* Keep an un-prefixed route for backward compatibility and direct links */}
+                <Route path="/performance-appraisal" element={<EmployeeAppraisal />} />
               </Route>
 
               {/* Assessor Routes */}
@@ -178,6 +186,7 @@ export default function App() {
                 <Route path="/assessor/individual-gap" element={<AssessorIndividualGap />} />
                 <Route path="/assessor/organization-gap" element={<AssessorOrganizationGap />} />
                 <Route path="/assessor/analytics" element={<AssessorAnalytics />} />
+                <Route path="/assessor/performance-appraisal" element={<AssessorAppraisal />} />
               </Route>
 
               {/* HR Routes */}
@@ -198,6 +207,7 @@ export default function App() {
                 <Route path="/hr/job" element={<HRJob />} />
                 <Route path="/hr/job-competency-profile" element={<HRJobCompetencyProfile />} />
                 <Route path="/hr/employee-assessor-assign" element={<HREmployeeAssessorAssign />} />
+                <Route path="/hr/performance-appraisal" element={<HRAppraisal />} />
                 <Route path="/hr/employee-details" element={<HREmployeeDetails />} />
                 <Route path="/hr/employee-job-assignment" element={<HREmployeeJobAssignment />} />
                 {/* <Route path="/hr/user" element={<HRUser />} /> */}

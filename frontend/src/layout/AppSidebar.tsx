@@ -75,6 +75,8 @@ const employeeNavItems: NavItem[] = [
     name: "Assessment Mgt",
     subItems: [
       { name: "Employee Assessment", path: "/employee-assessment" },
+      // employee routes are namespaced under /employee in App.tsx
+      { name: "Performance Appraisal", path: "/employee/performance-appraisal" },
     ],
   },
   {
@@ -128,6 +130,7 @@ const assessorNavItems: NavItem[] = [
     name: "Assessment Mgt",
     subItems: [
       { name: "Assessor Assessment", path: "/assessor/assessment" },
+      { name: "Performance Appraisal", path: "/assessor/performance-appraisal" },
     ],
   },
   {
@@ -183,6 +186,7 @@ const hrNavItems: NavItem[] = [
     subItems: [
       { name: "Assessor Assessment", path: "/hr/assessor-assessment" },
       { name: "Consensus Assessment", path: "/hr/consensus-assessment" },
+      { name: "Performance Appraisal", path: "/hr/performance-appraisal" },
     ],
   },
   {

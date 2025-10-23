@@ -14,6 +14,7 @@ import uploadsRouter from './routes/uploads';
 import assignmentsRouter from './routes/assignments';
 import jobAssignmentsRouter from './routes/employeeJobAssignments';
 import employeesRouter from './routes/employees';
+import appraisalsRouter from './routes/appraisals';
 
 dotenv.config();
 
@@ -50,6 +51,7 @@ app.use('/api/departments', depRouter);
 app.use('/api/jobs', jobsRouter);
 app.use('/api/competencies', compRouter);
 app.use('/api/assessments', assessRouter);
+app.use('/api/appraisals', appraisalsRouter);
 app.use('/api/analytics', analyticsRouter);
 app.use('/api/uploads', uploadsRouter);
 app.use('/api/assignments', assignmentsRouter);
