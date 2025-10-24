@@ -345,21 +345,6 @@ const EmployeeAppraisal: React.FC = () => {
                                 <h5 className="text-sm font-medium text-blue-800 dark:text-blue-300 mb-2">How to Measure:</h5>
                                 <p className="text-sm text-blue-700 dark:text-blue-400">{question.howToMeasure}</p>
                               </div>
-
-                              <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
-                                <h5 className="text-sm font-medium text-green-800 dark:text-green-300 mb-2">Good Indicator:</h5>
-                                <p className="text-sm text-green-700 dark:text-green-400">{question.goodIndicator}</p>
-                              </div>
-
-                              <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
-                                <h5 className="text-sm font-medium text-red-800 dark:text-red-300 mb-2">Red Flag:</h5>
-                                <p className="text-sm text-red-700 dark:text-red-400">{question.redFlag}</p>
-                              </div>
-
-                              <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                                <h5 className="text-sm font-medium text-gray-800 dark:text-gray-300 mb-2">Rating Criteria:</h5>
-                                <p className="text-sm text-gray-700 dark:text-gray-400">{question.ratingCriteria}</p>
-                              </div>
                             </div>
 
                             <div className="mb-6">
