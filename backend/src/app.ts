@@ -22,16 +22,12 @@ const app = express();
 
 app.use(express.json());
 
-// Enhanced CORS: allow multiple origins from env, handle preflight explicitly
-const originSetting = process.env.CORS_ORIGIN || '*';
-const allowedOrigins = originSetting.split(',').map(s => s.trim()).filter(Boolean);
+// CORS: allow all origins. Intentionally permissive so deployed frontends (and
+// third-party hostnames) can communicate without CORS failures. If you later
+// want to restrict origins, replace this with a whitelist using
+// `process.env.CORS_ORIGIN`.
 const corsOptions: cors.CorsOptions = {
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true); // non-browser or same-origin
-    if (originSetting === '*') return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(null, false);
-  },
+  origin: true, // reflect request origin and allow it
   credentials: true,
 };
 app.use(cors(corsOptions));
