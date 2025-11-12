@@ -3,7 +3,14 @@
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
-const BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:4000/api';
+// Base URL resolution:
+// - Prefer VITE_API_BASE_URL when set
+// - If running on Vercel without env, default to Render API
+// - Otherwise default to local dev
+const BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL
+  || (typeof window !== 'undefined' && window.location.hostname.endsWith('vercel.app')
+    ? 'https://ecap-project.onrender.com/api'
+    : 'http://localhost:4000/api');
 
 function getToken(): string | null {
   try {

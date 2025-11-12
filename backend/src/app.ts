@@ -22,13 +22,14 @@ const app = express();
 
 app.use(express.json());
 
-// CORS: allow all origins. Intentionally permissive so deployed frontends (and
-// third-party hostnames) can communicate without CORS failures. If you later
-// want to restrict origins, replace this with a whitelist using
-// `process.env.CORS_ORIGIN`.
+// CORS: allow all URLs, headers, and methods
+// This is intentionally permissive to avoid remote login/signup hanging
+// due to blocked preflight or origin checks.
 const corsOptions: cors.CorsOptions = {
-  origin: true, // reflect request origin and allow it
-  credentials: true,
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: false,
 };
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
@@ -36,6 +37,11 @@ app.options('*', cors(corsOptions));
 // Health check
 app.get('/health', (_req: Request, res: Response) => {
   res.json({ status: 'ok', service: 'hrmoffice-backend' });
+});
+
+// Root route - useful for Render/Vercel probes and quick checks
+app.get('/', (_req: Request, res: Response) => {
+  res.json({ status: 'ok', message: 'HRM Office API', base: '/api' });
 });
 
 // Routes will be mounted here
