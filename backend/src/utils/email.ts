@@ -5,6 +5,7 @@ const smtpPort = Number(process.env.SMTP_PORT || 465);
 const smtpUser = process.env.SMTP_USER || '';
 const smtpPass = process.env.SMTP_PASS || '';
 const smtpFrom = process.env.SMTP_FROM || 'no-reply@hrmoffice.local';
+const smtpDebug = (process.env.SMTP_DEBUG || '').toLowerCase() === 'true';
 
 let transporter: nodemailer.Transporter | null = null;
 
@@ -17,14 +18,24 @@ export function getTransporter() {
     transporter = nodemailer.createTransport({
       host: smtpHost,
       port: smtpPort,
-      // Use STARTTLS for 587; keep TLS for 465
+      // For Gmail on 587 use STARTTLS (secure:false + requireTLS:true). On 465 use implicit TLS.
       secure: smtpPort === 465,
       requireTLS: smtpPort !== 465,
       auth: { user: smtpUser, pass: smtpPass },
-      // Conservative timeouts to avoid hanging on providers blocking SMTP
-      connectionTimeout: 15000,
-      greetingTimeout: 10000,
-      socketTimeout: 20000,
+      // Enable pooling to reuse connections and improve reliability
+      pool: true,
+      // Extra-tolerant timeouts for free tiers (Render free can delay >50s)
+      connectionTimeout: 120000,
+      greetingTimeout: 60000,
+      socketTimeout: 120000,
+      // Ensure modern TLS when upgrading from STARTTLS
+      tls: {
+        minVersion: 'TLSv1.2',
+        servername: smtpHost,
+      },
+      // Optional verbose logs controlled via env
+      logger: smtpDebug,
+      name: 'hrmoffice-backend',
     });
     // Verify transporter connection early so errors are logged at startup
     transporter.verify()
@@ -40,11 +51,25 @@ export async function sendMail(to: string, subject: string, html: string) {
     console.log('[mailer] Simulated email:', { to, subject, html });
     return { simulated: true } as any;
   }
-  try {
-    return await tx.sendMail({ from: smtpFrom, to, subject, html });
-  } catch (err) {
-    console.error('[mailer] sendMail error:', err);
-    throw err;
+  const maxRetries = Number(process.env.SMTP_RETRIES || 3);
+  let attempt = 0;
+  const payload = { from: smtpFrom, to, subject, html } as any;
+  while (true) {
+    try {
+      return await tx.sendMail(payload);
+    } catch (err: any) {
+      attempt += 1;
+      const code = err?.code || '';
+      const msg = String(err?.message || err);
+      const retryableCodes = ['ETIMEDOUT', 'ECONNRESET', 'EHOSTUNREACH', 'ESOCKET', 'ECONNREFUSED'];
+      const isRetryable = retryableCodes.includes(code) || /timeout|greeting|connection\sclosed/i.test(msg);
+      console.error(`[mailer] sendMail attempt ${attempt} failed (${code}):`, msg);
+      if (!isRetryable || attempt > maxRetries) {
+        throw err;
+      }
+      const delayMs = Math.min(30000, 1000 * Math.pow(2, attempt));
+      await new Promise((r) => setTimeout(r, delayMs));
+    }
   }
 }
 

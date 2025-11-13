@@ -15,6 +15,7 @@ import assignmentsRouter from './routes/assignments';
 import jobAssignmentsRouter from './routes/employeeJobAssignments';
 import employeesRouter from './routes/employees';
 import appraisalsRouter from './routes/appraisals';
+import { getTransporter } from './utils/email';
 
 dotenv.config();
 
@@ -48,6 +49,18 @@ app.options('*', cors(corsOptions));
 // Health check
 app.get('/health', (_req: Request, res: Response) => {
   res.json({ status: 'ok', service: 'hrmoffice-backend' });
+});
+
+// SMTP health verification
+app.get('/health/smtp', async (_req: Request, res: Response) => {
+  try {
+    const tx = getTransporter();
+    if (!tx) return res.json({ configured: false, verified: false, message: 'SMTP env not fully configured' });
+    await tx.verify();
+    return res.json({ configured: true, verified: true });
+  } catch (e: any) {
+    return res.json({ configured: true, verified: false, error: String(e?.message || e) });
+  }
 });
 
 // Root route - useful for Render/Vercel probes and quick checks
