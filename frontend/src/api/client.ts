@@ -37,7 +37,8 @@ if (typeof window !== 'undefined') {
 }
 
 // Default network timeout to prevent infinite spinners when the backend is slow or unreachable
-const DEFAULT_TIMEOUT_MS = Number((import.meta as any).env?.VITE_API_TIMEOUT_MS) || 15000;
+// Increased to 30s to accommodate occasional cold starts on hosting providers
+const DEFAULT_TIMEOUT_MS = Number((import.meta as any).env?.VITE_API_TIMEOUT_MS) || 30000;
 
 function getToken(): string | null {
   try {

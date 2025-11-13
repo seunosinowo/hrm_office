@@ -67,19 +67,17 @@ router.post('/org/signup', async (req: Request, res: Response) => {
     const frontendUrl = process.env.FRONTEND_URL || (process.env.NODE_ENV === 'production' ? 'https://ecap-project.vercel.app' : 'http://localhost:5173');
     const verifyLink = `${frontendUrl}/auth/email-confirmation?token=${rawToken}`;
     const verifyTpl = buildVerifyEmail(org.name, verifyLink);
-    try {
-      await sendMail(adminEmail, verifyTpl.subject, verifyTpl.html);
-    } catch (e) {
+    // Send email verification asynchronously to avoid blocking the signup response
+    void sendMail(adminEmail, verifyTpl.subject, verifyTpl.html).catch((e) => {
       console.error('[mailer] failed to send verification email:', e);
-    }
+    });
 
     // Send welcome email to admin
     const welcome = buildWelcomeEmail(org.name);
-    try {
-      await sendMail(adminEmail, welcome.subject, welcome.html);
-    } catch (e) {
+    // Send welcome email asynchronously
+    void sendMail(adminEmail, welcome.subject, welcome.html).catch((e) => {
       console.error('[mailer] failed to send welcome email:', e);
-    }
+    });
 
     return res.status(201).json({
       user: { id: admin.id, email: admin.email, role: admin.role, organizationId: org.id },
@@ -178,7 +176,10 @@ router.post('/individual/signup', async (req: Request, res: Response) => {
     const frontendUrl = process.env.FRONTEND_URL || (process.env.NODE_ENV === 'production' ? 'https://ecap-project.vercel.app' : 'http://localhost:5173');
     const verifyLink = `${frontendUrl}/auth/email-confirmation?token=${rawToken}`;
     const verifyTpl = buildVerifyEmail(org.name, verifyLink);
-    await sendMail(user.email, verifyTpl.subject, verifyTpl.html);
+    // Fire-and-forget email verification to prevent request delays
+    void sendMail(user.email, verifyTpl.subject, verifyTpl.html).catch((e) => {
+      console.error('[mailer] failed to send verification email (individual):', e);
+    });
 
     return res.status(201).json({ id: user.id, email: user.email, role: user.role, emailVerificationRequired: true });
   } catch (e) {
@@ -256,7 +257,10 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
       const frontendUrl = process.env.FRONTEND_URL || (process.env.NODE_ENV === 'production' ? 'https://ecap-project.vercel.app' : 'http://localhost:5173');
       const link = `${frontendUrl}/auth/reset-password?token=${rawToken}`;
       const emailTpl = buildResetEmail(org.name, link);
-      await sendMail(user.email, emailTpl.subject, emailTpl.html);
+    // Asynchronous reset email send
+    void sendMail(user.email, emailTpl.subject, emailTpl.html).catch((e) => {
+      console.error('[mailer] failed to send password reset email:', e);
+    });
     }
 
     return res.status(200).json({ success: true });
@@ -316,7 +320,10 @@ router.post('/verify-email/resend', async (req: Request, res: Response) => {
     const frontendUrl = process.env.FRONTEND_URL || (process.env.NODE_ENV === 'production' ? 'https://ecap-project.vercel.app' : 'http://localhost:5173');
     const verifyLink = `${frontendUrl}/auth/email-confirmation?token=${rawToken}`;
     const verifyTpl = buildVerifyEmail(org.name, verifyLink);
-    await sendMail(user.email, verifyTpl.subject, verifyTpl.html);
+    // Asynchronous resend to avoid blocking
+    void sendMail(user.email, verifyTpl.subject, verifyTpl.html).catch((e) => {
+      console.error('[mailer] failed to resend verification email:', e);
+    });
 
     return res.json({ success: true });
   } catch (e) {
