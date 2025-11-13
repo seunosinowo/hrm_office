@@ -115,7 +115,10 @@ router.post('/', authMiddleware, rbac(['HR']), async (req: Request, res: Respons
       const frontendUrl = process.env.FRONTEND_URL || (process.env.NODE_ENV === 'production' ? 'https://ecap-project.vercel.app' : 'http://localhost:5173');
       const verifyLink = `${frontendUrl}/auth/email-confirmation?token=${rawToken}`;
       const verifyTpl = buildVerifyEmail(org?.name || 'HRM Office', verifyLink);
-      await sendMail(user.email, verifyTpl.subject, verifyTpl.html);
+      // Fire-and-forget the verification email so an SMTP outage doesn't delay the response
+      void sendMail(user.email, verifyTpl.subject, verifyTpl.html).catch((mailErr) => {
+        console.error('[mailer] failed to send verification email (employee create):', mailErr);
+      });
     } catch (mailErr) {
       console.error('[mailer] failed to send verification email:', mailErr);
     }

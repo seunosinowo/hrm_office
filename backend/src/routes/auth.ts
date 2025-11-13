@@ -127,7 +127,10 @@ router.post('/signup', authMiddleware, async (req: Request, res: Response) => {
     const frontendUrl = process.env.FRONTEND_URL || (process.env.NODE_ENV === 'production' ? 'https://ecap-project.vercel.app' : 'http://localhost:5173');
     const verifyLink = `${frontendUrl}/auth/email-confirmation?token=${rawToken}`;
     const verifyTpl = buildVerifyEmail(org?.name || 'HRM Office', verifyLink);
-    await sendMail(user.email, verifyTpl.subject, verifyTpl.html);
+    // Send verification email asynchronously (fire-and-forget) to avoid blocking the request
+    void sendMail(user.email, verifyTpl.subject, verifyTpl.html).catch((e) => {
+      console.error('[mailer] failed to send verification email (HR create user):', e);
+    });
 
     res.status(201).json({ id: user.id, email: user.email, role: user.role });
   } catch (e) {
