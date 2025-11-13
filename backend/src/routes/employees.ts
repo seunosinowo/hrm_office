@@ -112,7 +112,7 @@ router.post('/', authMiddleware, rbac(['HR']), async (req: Request, res: Respons
         },
       });
       const org = await prisma.organization.findUnique({ where: { id: req.user!.organizationId } });
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      const frontendUrl = process.env.FRONTEND_URL || (process.env.NODE_ENV === 'production' ? 'https://ecap-project.vercel.app' : 'http://localhost:5173');
       const verifyLink = `${frontendUrl}/auth/email-confirmation?token=${rawToken}`;
       const verifyTpl = buildVerifyEmail(org?.name || 'HRM Office', verifyLink);
       await sendMail(user.email, verifyTpl.subject, verifyTpl.html);

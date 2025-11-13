@@ -59,7 +59,7 @@ router.post('/org/signup', async (req: Request, res: Response) => {
       },
     });
 
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl = process.env.FRONTEND_URL || (process.env.NODE_ENV === 'production' ? 'https://ecap-project.vercel.app' : 'http://localhost:5173');
     const verifyLink = `${frontendUrl}/auth/email-confirmation?token=${rawToken}`;
     const verifyTpl = buildVerifyEmail(org.name, verifyLink);
     try {
@@ -121,7 +121,7 @@ router.post('/signup', authMiddleware, async (req: Request, res: Response) => {
       data: { organizationId: req.user!.organizationId, userId: user.id, tokenHash, expiresAt },
     });
     const org = await prisma.organization.findUnique({ where: { id: req.user!.organizationId } });
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl = process.env.FRONTEND_URL || (process.env.NODE_ENV === 'production' ? 'https://ecap-project.vercel.app' : 'http://localhost:5173');
     const verifyLink = `${frontendUrl}/auth/email-confirmation?token=${rawToken}`;
     const verifyTpl = buildVerifyEmail(org?.name || 'HRM Office', verifyLink);
     await sendMail(user.email, verifyTpl.subject, verifyTpl.html);
@@ -170,7 +170,7 @@ router.post('/individual/signup', async (req: Request, res: Response) => {
       data: { organizationId: org.id, userId: user.id, tokenHash, expiresAt },
     });
 
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl = process.env.FRONTEND_URL || (process.env.NODE_ENV === 'production' ? 'https://ecap-project.vercel.app' : 'http://localhost:5173');
     const verifyLink = `${frontendUrl}/auth/email-confirmation?token=${rawToken}`;
     const verifyTpl = buildVerifyEmail(org.name, verifyLink);
     await sendMail(user.email, verifyTpl.subject, verifyTpl.html);
@@ -248,7 +248,7 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
         },
       });
 
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      const frontendUrl = process.env.FRONTEND_URL || (process.env.NODE_ENV === 'production' ? 'https://ecap-project.vercel.app' : 'http://localhost:5173');
       const link = `${frontendUrl}/auth/reset-password?token=${rawToken}`;
       const emailTpl = buildResetEmail(org.name, link);
       await sendMail(user.email, emailTpl.subject, emailTpl.html);
@@ -308,7 +308,7 @@ router.post('/verify-email/resend', async (req: Request, res: Response) => {
       data: { organizationId: org.id, userId: user.id, tokenHash, expiresAt },
     });
 
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl = process.env.FRONTEND_URL || (process.env.NODE_ENV === 'production' ? 'https://ecap-project.vercel.app' : 'http://localhost:5173');
     const verifyLink = `${frontendUrl}/auth/email-confirmation?token=${rawToken}`;
     const verifyTpl = buildVerifyEmail(org.name, verifyLink);
     await sendMail(user.email, verifyTpl.subject, verifyTpl.html);
