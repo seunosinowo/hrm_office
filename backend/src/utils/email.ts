@@ -26,6 +26,10 @@ export function getTransporter() {
       greetingTimeout: 10000,
       socketTimeout: 20000,
     });
+    // Verify transporter connection early so errors are logged at startup
+    transporter.verify()
+      .then(() => console.info('[mailer] SMTP transporter verified'))
+      .catch(err => console.error('[mailer] SMTP verify failed:', err));
   }
   return transporter;
 }
@@ -36,7 +40,12 @@ export async function sendMail(to: string, subject: string, html: string) {
     console.log('[mailer] Simulated email:', { to, subject, html });
     return { simulated: true } as any;
   }
-  return tx.sendMail({ from: smtpFrom, to, subject, html });
+  try {
+    return await tx.sendMail({ from: smtpFrom, to, subject, html });
+  } catch (err) {
+    console.error('[mailer] sendMail error:', err);
+    throw err;
+  }
 }
 
 export function buildWelcomeEmail(orgName: string) {
