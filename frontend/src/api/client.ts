@@ -12,6 +12,9 @@ const BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL
     ? 'https://ecap-project.onrender.com/api'
     : 'http://localhost:4000/api');
 
+// Default network timeout to prevent infinite spinners when the backend is slow or unreachable
+const DEFAULT_TIMEOUT_MS = Number((import.meta as any).env?.VITE_API_TIMEOUT_MS) || 15000;
+
 function getToken(): string | null {
   try {
     return localStorage.getItem('jwt_token');
@@ -20,7 +23,7 @@ function getToken(): string | null {
   }
 }
 
-export async function apiFetch<T = any>(path: string, options: { method?: HttpMethod; body?: any; headers?: Record<string, string> } = {}): Promise<T> {
+export async function apiFetch<T = any>(path: string, options: { method?: HttpMethod; body?: any; headers?: Record<string, string>, timeoutMs?: number } = {}): Promise<T> {
   const url = `${BASE_URL}${path.startsWith('/') ? path : `/${path}`}`;
 
   const headers: Record<string, string> = {
@@ -35,12 +38,25 @@ export async function apiFetch<T = any>(path: string, options: { method?: HttpMe
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const resp = await fetch(url, {
-    method: options.method || 'GET',
-    headers,
-    body: options.body ? JSON.stringify(options.body) : undefined,
-    cache: 'no-store',
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), options.timeoutMs || DEFAULT_TIMEOUT_MS);
+  let resp: Response;
+  try {
+    resp = await fetch(url, {
+      method: options.method || 'GET',
+      headers,
+      body: options.body ? JSON.stringify(options.body) : undefined,
+      cache: 'no-store',
+      signal: controller.signal,
+    });
+  } catch (err: any) {
+    clearTimeout(timeout);
+    if (err && err.name === 'AbortError') {
+      throw new Error('Request timed out. Please try again.');
+    }
+    throw err;
+  }
+  clearTimeout(timeout);
 
   const contentType = resp.headers.get('content-type') || '';
   const isJson = contentType.includes('application/json');

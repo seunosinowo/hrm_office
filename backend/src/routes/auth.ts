@@ -8,6 +8,11 @@ import { generateToken, hashToken } from '../utils/tokens';
 
 const router = Router();
 
+// Lightweight connectivity ping for diagnostics
+router.get('/ping', async (_req: Request, res: Response) => {
+  res.json({ ok: true, timestamp: Date.now() });
+});
+
 // Organization signup + create HR admin user
 router.post('/org/signup', async (req: Request, res: Response) => {
   try {
