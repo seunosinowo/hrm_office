@@ -17,8 +17,14 @@ export function getTransporter() {
     transporter = nodemailer.createTransport({
       host: smtpHost,
       port: smtpPort,
+      // Use STARTTLS for 587; keep TLS for 465
       secure: smtpPort === 465,
+      requireTLS: smtpPort !== 465,
       auth: { user: smtpUser, pass: smtpPass },
+      // Conservative timeouts to avoid hanging on providers blocking SMTP
+      connectionTimeout: 15000,
+      greetingTimeout: 10000,
+      socketTimeout: 20000,
     });
   }
   return transporter;
