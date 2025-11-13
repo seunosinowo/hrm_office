@@ -5,12 +5,36 @@ type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
 // Base URL resolution:
 // - Prefer VITE_API_BASE_URL when set
-// - If running on Vercel without env, default to Render API
-// - Otherwise default to local dev
-const BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL
-  || (typeof window !== 'undefined' && window.location.hostname.endsWith('vercel.app')
-    ? 'https://ecap-project.onrender.com/api'
-    : 'http://localhost:4000/api');
+// - Otherwise choose from a list of known backends
+// - Final fallback to local dev
+function resolveBaseUrl(): string {
+  const envUrl = (import.meta as any).env?.VITE_API_BASE_URL as string | undefined;
+  if (envUrl && envUrl.trim()) return envUrl.trim();
+
+  // Known production/staging backends
+  const knownUrls = [
+    // Render (production)
+    'https://ecap-project.onrender.com/api',
+  ];
+
+  // If the frontend is being served from Render for any reason, prefer same-origin + /api
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    const origin = window.location.origin;
+    if (host.endsWith('onrender.com')) {
+      knownUrls.unshift(`${origin}/api`);
+    }
+  }
+
+  // Return first known URL, otherwise local dev
+  return knownUrls[0] || 'http://localhost:4000/api';
+}
+
+const BASE_URL = resolveBaseUrl();
+// Expose for quick diagnostics in browser console
+if (typeof window !== 'undefined') {
+  (window as any).__API_BASE_URL__ = BASE_URL;
+}
 
 // Default network timeout to prevent infinite spinners when the backend is slow or unreachable
 const DEFAULT_TIMEOUT_MS = Number((import.meta as any).env?.VITE_API_TIMEOUT_MS) || 15000;
