@@ -24,24 +24,41 @@ const app = express();
 app.use(express.json());
 
 // Explicit CORS headers for all routes (preflight and actual)
+// Allowed frontend origins (add any additional production frontends here)
+const allowedOrigins = [
+  'https://ecap-project.vercel.app',
+  'https://ecap-project.onrender.com',
+  'http://localhost:5173',
+  'ecap-project.vercel.app',
+];
+
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
+  const origin = (req.headers.origin as string) || '';
+  const allowOrigin = allowedOrigins.includes(origin) ? origin : '*';
+  res.header('Access-Control-Allow-Origin', allowOrigin);
   res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
   const reqAllowHeaders = (req.headers['access-control-request-headers'] as string) || 'Content-Type, Authorization';
   res.header('Access-Control-Allow-Headers', reqAllowHeaders);
+  // If credentials are used, also set Access-Control-Allow-Credentials accordingly
+  if (allowOrigin !== '*') {
+    res.header('Access-Control-Allow-Credentials', 'true');
+  }
   if (req.method === 'OPTIONS') {
     return res.sendStatus(204);
   }
   next();
 });
 
-// CORS: allow all URLs, headers, and methods
-// This is intentionally permissive to avoid remote login/signup hanging
-// due to blocked preflight or origin checks.
+// CORS options using a dynamic origin function to respect the whitelist
 const corsOptions: cors.CorsOptions = {
-  origin: '*',
+  origin: (origin, cb) => {
+    // If no origin (e.g., server-to-server), allow it
+    if (!origin) return cb(null, true);
+    if (allowedOrigins.includes(origin)) return cb(null, true);
+    return cb(new Error('Not allowed by CORS'));
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  credentials: false,
+  credentials: true,
 };
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
