@@ -16,14 +16,12 @@ router.get('/ping', async (_req: Request, res: Response) => {
 // Organization signup + create HR admin user
 router.post('/org/signup', async (req: Request, res: Response) => {
   try {
-    const { organizationName, organizationEmail, slug, adminEmail, adminPassword, firstName, lastName, logoUrl, address } = req.body as {
+    const { organizationName, organizationEmail, slug, adminEmail, adminPassword, logoUrl, address } = req.body as {
       organizationName: string;
       organizationEmail: string;
       slug: string;
       adminEmail: string;
       adminPassword: string;
-      firstName?: string;
-      lastName?: string;
       logoUrl?: string;
       address?: string;
     };
@@ -45,8 +43,9 @@ router.post('/org/signup', async (req: Request, res: Response) => {
         organizationId: org.id,
         email: adminEmail,
         passwordHash,
-        firstName: firstName || '',
-        lastName: lastName || '',
+        // Use organization name as the admin's display name
+        firstName: organizationName,
+        lastName: '',
         role: 'HR',
       },
     });

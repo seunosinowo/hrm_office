@@ -280,8 +280,6 @@ export async function signupOrganizationAdmin(payload: {
   slug: string;
   adminEmail: string;
   adminPassword: string;
-  firstName?: string;
-  lastName?: string;
 }) {
   return apiFetch('/auth/org/signup', {
     method: 'POST',

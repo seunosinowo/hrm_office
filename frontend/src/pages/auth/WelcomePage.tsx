@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ThemeToggleButton } from "../../components/common/ThemeToggleButton";
 import { useAuth } from "../../context/AuthContext";
+import { getMyOrganization } from "../../api/services";
 
 // Add redirectPath property to Window interface
 declare global {
@@ -18,7 +19,8 @@ export default function WelcomePage() {
   const { user } = useAuth();
 
   useEffect(() => {
-    try {
+    (async () => {
+      try {
       // No JWT/user present -> redirect to login
       if (!user) {
         setLoading(false);
@@ -26,15 +28,35 @@ export default function WelcomePage() {
         return;
       }
 
-      // Derive display name
-      const displayName = user.firstName || user.lastName
-        ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
-        : (user.email?.split('@')[0] || '')?.replace(/^./, (c) => c.toUpperCase());
-      setUserName(displayName || 'User');
+      // Derive display name; for HR, prefer organization name
+      const roles = user.roles || [];
+      if (roles.includes('hr')) {
+        try {
+          const org = await getMyOrganization();
+          const orgName = org?.name?.trim();
+          if (orgName) {
+            setUserName(orgName);
+          } else {
+            const fallback = user.firstName || user.lastName
+              ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
+              : (user.email?.split('@')[0] || '')?.replace(/^./, (c) => c.toUpperCase());
+            setUserName(fallback || 'User');
+          }
+        } catch {
+          const fallback = user.firstName || user.lastName
+            ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
+            : (user.email?.split('@')[0] || '')?.replace(/^./, (c) => c.toUpperCase());
+          setUserName(fallback || 'User');
+        }
+      } else {
+        const displayName = user.firstName || user.lastName
+          ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
+          : (user.email?.split('@')[0] || '')?.replace(/^./, (c) => c.toUpperCase());
+        setUserName(displayName || 'User');
+      }
 
       // Determine redirect path based on highest role
       let redirectPath = '/page-description';
-      const roles = user.roles || [];
       if (roles.includes('hr')) {
         redirectPath = '/hr/page-description';
       } else if (roles.includes('assessor')) {
@@ -58,6 +80,7 @@ export default function WelcomePage() {
       setLoading(false);
       navigate('/auth/login', { replace: true });
     }
+    })();
   }, [user, navigate]);
 
   if (loading) {

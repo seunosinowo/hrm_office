@@ -51,8 +51,6 @@ export default function SignUp() {
           slug: normalizedSlug,
           adminEmail,
           adminPassword,
-          firstName: firstName.trim() || undefined,
-          lastName: lastName.trim() || undefined,
         };
 
         await signupOrganizationAdmin(payload);
@@ -229,18 +227,6 @@ export default function SignUp() {
                 {signUpType === 'organization' && (
                   <>
                     <div>
-                      <label htmlFor="org-name" className="sr-only">Organization name</label>
-                      <input
-                        id="org-name"
-                        name="org-name"
-                        type="text"
-                        className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm dark:bg-gray-800 mb-4"
-                        placeholder="Organization name"
-                        value={orgName}
-                        onChange={(e) => setOrgName(e.target.value)}
-                      />
-                    </div>
-                    <div>
                       <label htmlFor="org-email" className="sr-only">Organization email</label>
                       <input
                         id="org-email"
@@ -333,31 +319,18 @@ export default function SignUp() {
                 </div>
 
                 {signUpType === 'organization' && (
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label htmlFor="first-name" className="sr-only">First name (optional)</label>
-                      <input
-                        id="first-name"
-                        name="first-name"
-                        type="text"
-                        className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm dark:bg-gray-800"
-                        placeholder="First name (optional)"
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label htmlFor="last-name" className="sr-only">Last name (optional)</label>
-                      <input
-                        id="last-name"
-                        name="last-name"
-                        type="text"
-                        className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm dark:bg-gray-800"
-                        placeholder="Last name (optional)"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                      />
-                    </div>
+                  <div>
+                    <label htmlFor="org-name" className="sr-only">Organization name</label>
+                    <input
+                      id="org-name"
+                      name="org-name"
+                      type="text"
+                      required
+                      className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-700 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm dark:bg-gray-800"
+                      placeholder="Organization name"
+                      value={orgName}
+                      onChange={(e) => setOrgName(e.target.value)}
+                    />
                   </div>
                 )}
               </div>
