@@ -14,7 +14,7 @@ type User = {
 type AuthContextType = {
   user: User | null;
   signIn: (email: string, password: string, slug: string) => Promise<User>;
-  signUp: (params: { organizationName: string; organizationEmail: string; slug: string; adminEmail: string; adminPassword: string; firstName?: string; lastName?: string; }) => Promise<void>;
+  signUp: (params: { organizationName: string; organizationEmail: string; slug: string; adminEmail: string; adminPassword: string; }) => Promise<void>;
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   resetPassword: (email: string, slug: string) => Promise<void>;
@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return newUser;
   };
 
-  const signUp = async (params: { organizationName: string; organizationEmail: string; slug: string; adminEmail: string; adminPassword: string; firstName?: string; lastName?: string; }) => {
+  const signUp = async (params: { organizationName: string; organizationEmail: string; slug: string; adminEmail: string; adminPassword: string; }) => {
     await api.post<{ token: string; user: { id: string; email: string; role: string; organizationId: string } }>(
       '/auth/org/signup',
       {
@@ -74,8 +74,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         slug: params.slug,
         adminEmail: params.adminEmail,
         adminPassword: params.adminPassword,
-        firstName: params.firstName,
-        lastName: params.lastName,
       }
     );
     // Do not auto-login here; let UI redirect to login/setup

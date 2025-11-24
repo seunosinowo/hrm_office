@@ -9,8 +9,6 @@ export default function OrgSignup() {
     slug: '',
     adminEmail: '',
     adminPassword: '',
-    firstName: '',
-    lastName: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,8 +31,6 @@ export default function OrgSignup() {
         slug: form.slug,
         adminEmail: form.adminEmail,
         adminPassword: form.adminPassword,
-        firstName: form.firstName || undefined,
-        lastName: form.lastName || undefined,
       });
       // Store context for email confirmation/resend and redirect
       sessionStorage.setItem('pendingEmail', form.adminEmail);
@@ -84,14 +80,7 @@ export default function OrgSignup() {
             <input type="password" name="adminPassword" value={form.adminPassword} onChange={onChange} required className="mt-1 w-full rounded-md border border-gray-300 p-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">First Name</label>
-              <input name="firstName" value={form.firstName} onChange={onChange} className="mt-1 w-full rounded-md border border-gray-300 p-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Last Name</label>
-              <input name="lastName" value={form.lastName} onChange={onChange} className="mt-1 w-full rounded-md border border-gray-300 p-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
-            </div>
+            {/* Admin first/last name no longer required; derived from organization name */}
           </div>
 
           <button type="submit" disabled={loading} className="mt-4 w-full rounded-md bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700 disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-600">
